@@ -20,19 +20,31 @@ class AutoDeployCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Run deploy.';
+    protected $description = 'Run command deploy of action.';
 
     /**
      * Execute the console command.
      *
-     * @return void
+     * @return int
      */
-    public function handle()
+    public function handle(): int
     {
-        $config = Config::load(base_path('.deploy.yml'));
         $action = $this->argument('action');
+        if (config('deploy.method') == 'cron') {
+            $schedule = get_config('deploy_schedules', []);
+            if (!isset($schedule[$action])) {
+                return self::SUCCESS;
+            }
+        }
         
-        foreach ($config->get("{$action}.commands", []) as $command) {
+        $config = Config::load(base_path('.deploy.yml'));
+        $commands = $config->get("{$action}.commands", []);
+        if (empty($commands)) {
+            $this->error("Action not found.");
+            return self::SUCCESS;
+        }
+        
+        foreach ($commands as $command) {
             $this->info("Running '{$command}'");
             $cmd = explode(' ', trim($command));
             if ($cmd[0] == 'php' && $cmd[1] == 'artisan') {
@@ -47,5 +59,9 @@ class AutoDeployCommand extends Command
                 );
             }
         }
+        
+        return self::SUCCESS;
     }
+    
+    
 }
