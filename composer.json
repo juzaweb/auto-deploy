@@ -1,0 +1,22 @@
+{
+    "name": "juzaweb/auto-deploy",
+    "description": "Automate deployment deployment using git and webhooks",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Juzaweb\\AutoDeploy\\Providers\\AutoDeployServiceProvider"
+            ]
+        },
+        "juzaweb": {
+            "name": "Automate deployment",
+            "domain": "deploy",
+            "cms_min": "3.3",
+            "version": "1.0"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Juzaweb\\AutoDeploy\\": "src/"
+        }
+    }
+}
