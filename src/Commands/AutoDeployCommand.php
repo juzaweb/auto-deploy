@@ -39,6 +39,8 @@ class AutoDeployCommand extends Command
     
             $action = array_key_first($schedule);
             unset($schedule[$action]);
+            set_config('deploy_schedules', $schedule);
+            
             $this->runAction($action);
             return self::SUCCESS;
         }
