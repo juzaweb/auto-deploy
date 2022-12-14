@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'enable' => env('DEPLOY_ENABLE', false),
+    
     'github' => [
         'secret' => env('DEPLOY_GITHUB_SECRET'),
     ],

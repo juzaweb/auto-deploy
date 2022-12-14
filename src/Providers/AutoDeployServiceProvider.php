@@ -15,7 +15,7 @@ class AutoDeployServiceProvider extends ServiceProvider
         $this->app->booted(
             function () {
                 $schedule = $this->app->make(Schedule::class);
-                if (config('deploy.method') == 'cron') {
+                if (config('deploy.enable') && config('deploy.method') == 'cron') {
                     $schedule->command(AutoDeployCommand::class)->everyMinute();
                 }
             }
