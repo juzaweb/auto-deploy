@@ -6,7 +6,7 @@ return [
     ],
     /**
      * Run command deploy with method
-     * Support: sync, queue, cron
+     * Support: queue, cron
      */
-    'method' => env('DEPLOY_METHOD', 'sync'),
+    'method' => env('DEPLOY_METHOD', 'cron'),
 ];

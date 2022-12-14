@@ -12,6 +12,7 @@ namespace Juzaweb\AutoDeploy\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Juzaweb\AutoDeploy\Commands\AutoDeployCommand;
 use Juzaweb\CMS\Http\Controllers\ApiController;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -29,6 +30,8 @@ class DeployController extends ApiController
         if (!hash_equals($githubHash, $localHash)) {
             abort(403);
         }
+        
+        Log::info("Deploy: ". json_encode($request->all()));
         
         switch (config('deploy.method')) {
             case 'cron':

@@ -3,6 +3,7 @@
 namespace Juzaweb\AutoDeploy\Commands;
 
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Process\Process;
 use Noodlehaus\Config;
 
@@ -13,7 +14,7 @@ class AutoDeployCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'deploy:run {action}';
+    protected $name = 'deploy:run';
 
     /**
      * The console command description.
@@ -32,18 +33,30 @@ class AutoDeployCommand extends Command
         $action = $this->argument('action');
         if (config('deploy.method') == 'cron') {
             $schedule = get_config('deploy_schedules', []);
-            if (!isset($schedule[$action])) {
+            if (empty($schedule)) {
                 return self::SUCCESS;
             }
+    
+            $action = array_key_first($schedule);
+            unset($schedule[$action]);
+            $this->runAction($action);
+            return self::SUCCESS;
         }
         
+        $this->runAction($action);
+        
+        return self::SUCCESS;
+    }
+    
+    protected function runAction(string $action)
+    {
         $config = Config::load(base_path('.deploy.yml'));
         $commands = $config->get("{$action}.commands", []);
         if (empty($commands)) {
             $this->error("Action not found.");
             return self::SUCCESS;
         }
-        
+    
         foreach ($commands as $command) {
             $this->info("Running '{$command}'");
             $cmd = explode(' ', trim($command));
@@ -51,7 +64,7 @@ class AutoDeployCommand extends Command
                 $this->call($cmd[2]);
             } else {
                 $process = new Process($cmd);
-    
+            
                 $process->run(
                     function ($type, $buffer) {
                         $this->info($buffer);
@@ -59,9 +72,12 @@ class AutoDeployCommand extends Command
                 );
             }
         }
-        
-        return self::SUCCESS;
     }
     
-    
+    protected function getArguments(): array
+    {
+        return [
+            ['action', InputArgument::OPTIONAL, 'The action to run.'],
+        ];
+    }
 }
