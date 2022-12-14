@@ -19,8 +19,12 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 class DeployController extends ApiController
 {
-    public function github(Request $request, string $action)
+    public function github(Request $request, string $action): \Illuminate\Http\Response
     {
+        if (!config('deploy.enable')) {
+            return response("Deploy is not enabled.", 403);
+        }
+        
         $outputLog = new BufferedOutput();
         $githubPayload = $request->getContent();
         $githubHash = $request->header('X-Hub-Signature');
