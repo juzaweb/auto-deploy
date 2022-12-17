@@ -3,6 +3,7 @@
 namespace Juzaweb\AutoDeploy\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Process\Process;
 use Noodlehaus\Config;
@@ -50,7 +51,7 @@ class AutoDeployCommand extends Command
         return self::SUCCESS;
     }
     
-    protected function runAction(string $action)
+    protected function runAction(string $action): int
     {
         $config = Config::load(base_path('.deploy.yml'));
         $commands = $config->get("{$action}.commands", []);
@@ -74,6 +75,10 @@ class AutoDeployCommand extends Command
                 );
             }
         }
+    
+        Log::info("Deploy success {$action}");
+    
+        return self::SUCCESS;
     }
     
     protected function getArguments(): array
