@@ -48,7 +48,7 @@ Webhook Url:
 https://yourdomain.com/webhook/deploy/github/{action}/{token}?theme=default
 ```
 
-On `.deploy.yml`
+In file `.deploy.yml`
 ```yml
 github-deploy:
   commands:
