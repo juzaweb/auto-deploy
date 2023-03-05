@@ -47,7 +47,7 @@ class AutoDeployCommand extends Command
             $index = array_key_first($schedule);
             $action = $schedule[$index];
             unset($schedule[$index]);
-            //set_config('deploy_schedules', $schedule);
+            set_config('deploy_schedules', $schedule);
 
             if (is_array($action)) {
                 $this->autoDeploy->run($action['action'], $action['params']);
