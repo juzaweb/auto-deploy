@@ -63,7 +63,7 @@ class AutoDeploy implements AutoDeployContrast
         return true;
     }
 
-    public function webhook(Request $request, string $action, string $token, array $params = []): Response
+    public function webhook(Request $request, string $action, string $token): Response
     {
         Log::info("Auto Deploy Webhook: ". json_encode($request->all()));
 
@@ -75,7 +75,7 @@ class AutoDeploy implements AutoDeployContrast
                 $schedule[] = [
                     'action' => $action,
                     'token' => $token,
-                    'params' => $params,
+                    'params' => $request->query(),
                     'time' => date('Y-m-d H:i:s')
                 ];
                 set_config('deploy_schedules', $schedule);
@@ -92,7 +92,7 @@ class AutoDeploy implements AutoDeployContrast
 
     protected function verifyWebhook(Request $request, string $token)
     {
-        if (config('deploy.github.verify')) {
+        if (config('deploy.github.verify', true)) {
             $githubPayload = $request->getContent();
             $githubHash = $request->header('X-Hub-Signature');
             $localToken = config('deploy.github.secret');

@@ -21,12 +21,12 @@ class DeployController extends ApiController
     {
     }
 
-    public function handle(Request $request, string $action, string $token): Response
+    public function handle(Request $request, string $module, string $action, string $token): Response
     {
         if (!config('deploy.enable')) {
             return response("Deploy is not enabled.", 403);
         }
 
-        return $this->autoDeploy->webhook($request, $action, $token, $request->query());
+        return $this->autoDeploy->webhook($request, $action, $token);
     }
 }

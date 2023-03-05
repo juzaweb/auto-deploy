@@ -12,6 +12,6 @@ use Juzaweb\AutoDeploy\Http\Controllers\DeployController;
 
 Route::match(
     ['GET', 'POST'],
-    'auto-deploy/{action}/{token}',
+    'deploy/{module}/{action}/{token}',
     [DeployController::class, 'handle']
 )->name('auto-deploy.handle');

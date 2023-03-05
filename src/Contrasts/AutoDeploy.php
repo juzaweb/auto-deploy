@@ -19,5 +19,5 @@ interface AutoDeploy
 {
     public function run(string $action, array $params = []): bool;
 
-    public function webhook(Request $request, string $action, string $token, array $params = []): Response;
+    public function webhook(Request $request, string $action, string $token): Response;
 }
