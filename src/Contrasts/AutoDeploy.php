@@ -17,7 +17,7 @@ use Illuminate\Http\Response;
 
 interface AutoDeploy
 {
-    public function run(string $action, string $token, array $params = []): bool;
+    public function run(string $action, array $params = []): bool;
 
     public function webhook(Request $request, string $action, string $token, array $params = []): Response;
 }

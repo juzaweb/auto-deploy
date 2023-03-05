@@ -25,69 +25,7 @@ use Symfony\Component\Process\Process;
 
 class AutoDeploy implements AutoDeployContrast
 {
-    public function run(string $action, string $token, array $params = []): bool
-    {
-        if (config('deploy.method') == 'cron') {
-            $schedule = get_config('deploy_schedules', []);
-            if (empty($schedule)) {
-                return true;
-            }
-
-            $action = array_key_first($schedule);
-            unset($schedule[$action]);
-            set_config('deploy_schedules', $schedule);
-
-            $this->runAction($action, $params);
-
-            return true;
-        }
-
-        $this->runAction($action, $params);
-
-        return true;
-    }
-
-    public function webhook(Request $request, string $action, string $token, array $params = []): Response
-    {
-        Log::info("Auto Deploy Webhook: ". json_encode($request->all()));
-
-        $this->verifyWebhook($request, $token);
-
-        switch (config('deploy.method')) {
-            case 'cron':
-                $schedule = get_config('deploy_schedules', []);
-                $schedule[$action] = date('Y-m-d H:i:s');
-                set_config('deploy_schedules', $schedule);
-                return response("Deploy command is running...");
-            case 'queue':
-                Artisan::queue(AutoDeployCommand::class, ['action' => $action]);
-                return response("Deploy command is running...");
-            default:
-                $outputLog = new BufferedOutput();
-                Artisan::call(AutoDeployCommand::class, ['action' => $action], $outputLog);
-                return response($outputLog->fetch());
-        }
-    }
-
-    protected function verifyWebhook(Request $request, string $token)
-    {
-        if (config('deploy.github.verify')) {
-            $githubPayload = $request->getContent();
-            $githubHash = $request->header('X-Hub-Signature');
-            $localToken = config('deploy.github.secret');
-            $localHash = 'sha1='.hash_hmac('sha1', $githubPayload, $localToken);
-
-            if (!hash_equals($githubHash, $localHash)) {
-                throw new AutoDeployException("Signature invalid");
-            }
-        }
-
-        if (!DeployToken::where(['uuid' => $token])->exists()) {
-            throw new AutoDeployException("Token invalid");
-        }
-    }
-
-    protected function runAction(string $action, array $params = []): int
+    public function run(string $action, array $params = []): bool
     {
         $config = Config::load(base_path('.deploy.yml'));
         $commands = $config->get("{$action}.commands", []);
@@ -120,5 +58,45 @@ class AutoDeploy implements AutoDeployContrast
         Log::info("Run success action {$action}");
 
         return true;
+    }
+
+    public function webhook(Request $request, string $action, string $token, array $params = []): Response
+    {
+        Log::info("Auto Deploy Webhook: ". json_encode($request->all()));
+
+        $this->verifyWebhook($request, $token);
+
+        switch (config('deploy.method')) {
+            case 'cron':
+                $schedule = get_config('deploy_schedules', []);
+                $schedule[] = ['token' => $token, 'params' => $params, 'time' => date('Y-m-d H:i:s')];
+                set_config('deploy_schedules', $schedule);
+                return response("Deploy command is running...");
+            case 'queue':
+                Artisan::queue(AutoDeployCommand::class, ['action' => $action]);
+                return response("Deploy command is running...");
+            default:
+                $outputLog = new BufferedOutput();
+                Artisan::call(AutoDeployCommand::class, ['action' => $action], $outputLog);
+                return response($outputLog->fetch());
+        }
+    }
+
+    protected function verifyWebhook(Request $request, string $token)
+    {
+        if (config('deploy.github.verify')) {
+            $githubPayload = $request->getContent();
+            $githubHash = $request->header('X-Hub-Signature');
+            $localToken = config('deploy.github.secret');
+            $localHash = 'sha1='.hash_hmac('sha1', $githubPayload, $localToken);
+
+            if (!hash_equals($githubHash, $localHash)) {
+                throw new AutoDeployException("Signature invalid");
+            }
+        }
+
+        if (!DeployToken::where(['uuid' => $token])->exists()) {
+            throw new AutoDeployException("Token invalid");
+        }
     }
 }

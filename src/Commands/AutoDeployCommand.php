@@ -36,10 +36,29 @@ class AutoDeployCommand extends Command
     public function handle(): int
     {
         $action = $this->argument('action');
-        $token = $this->argument('token');
-        $params = $this->option('params');
+        $params = json_decode($this->option('params'), true);
 
-        $this->autoDeploy->run($action);
+        if (config('deploy.method') == 'cron') {
+            $schedule = get_config('deploy_schedules', []);
+            if (empty($schedule)) {
+                return true;
+            }
+
+            $index = array_key_first($schedule);
+            $action = $schedule[$index];
+            unset($schedule[$index]);
+            set_config('deploy_schedules', $schedule);
+
+            if (is_array($action)) {
+                $this->autoDeploy->run($action['action'], $action['params']);
+            } else {
+                $this->autoDeploy->run($action);
+            }
+
+            return self::SUCCESS;
+        }
+
+        $this->autoDeploy->run($action, $params);
 
         return self::SUCCESS;
     }
@@ -47,8 +66,8 @@ class AutoDeployCommand extends Command
     protected function getArguments(): array
     {
         return [
-            ['action', InputArgument::REQUIRED, 'The action to run.'],
-            ['token', InputArgument::REQUIRED, 'The token to run.'],
+            ['action', InputArgument::OPTIONAL, 'The action to run.'],
+            ['token', InputArgument::OPTIONAL, 'The token to run.'],
         ];
     }
 
@@ -65,7 +84,7 @@ class AutoDeployCommand extends Command
                 'p',
                 InputOption::VALUE_OPTIONAL,
                 'Custom params for commands.',
-                null,
+                '[]',
             ],
         ];
     }
