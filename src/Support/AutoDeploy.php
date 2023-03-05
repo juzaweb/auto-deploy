@@ -14,16 +14,18 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Juzaweb\AutoDeploy\Commands\AutoDeployCommand;
 use Juzaweb\AutoDeploy\Contrasts\AutoDeploy as AutoDeployContrast;
 use Juzaweb\AutoDeploy\Exceptions\AutoDeployException;
+use Juzaweb\AutoDeploy\Models\DeployToken;
 use Noodlehaus\Config;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Process\Process;
 
 class AutoDeploy implements AutoDeployContrast
 {
-    public function run(string $action): bool
+    public function run(string $action, string $token, array $params = []): bool
     {
         if (config('deploy.method') == 'cron') {
             $schedule = get_config('deploy_schedules', []);
@@ -35,12 +37,12 @@ class AutoDeploy implements AutoDeployContrast
             unset($schedule[$action]);
             set_config('deploy_schedules', $schedule);
 
-            $this->runAction($action);
+            $this->runAction($action, $params);
 
             return true;
         }
 
-        $this->runAction($action);
+        $this->runAction($action, $params);
 
         return true;
     }
@@ -49,16 +51,7 @@ class AutoDeploy implements AutoDeployContrast
     {
         Log::info("Auto Deploy Webhook: ". json_encode($request->all()));
 
-        if (config('deploy.github.verify')) {
-            $githubPayload = $request->getContent();
-            $githubHash = $request->header('X-Hub-Signature');
-            $localToken = config('deploy.github.secret');
-            $localHash = 'sha1='.hash_hmac('sha1', $githubPayload, $localToken);
-
-            if (!hash_equals($githubHash, $localHash)) {
-                throw new AutoDeployException("Signature invalid");
-            }
-        }
+        $this->verifyWebhook($request, $token);
 
         switch (config('deploy.method')) {
             case 'cron':
@@ -76,16 +69,41 @@ class AutoDeploy implements AutoDeployContrast
         }
     }
 
-    protected function runAction(string $action): int
+    protected function verifyWebhook(Request $request, string $token)
+    {
+        if (config('deploy.github.verify')) {
+            $githubPayload = $request->getContent();
+            $githubHash = $request->header('X-Hub-Signature');
+            $localToken = config('deploy.github.secret');
+            $localHash = 'sha1='.hash_hmac('sha1', $githubPayload, $localToken);
+
+            if (!hash_equals($githubHash, $localHash)) {
+                throw new AutoDeployException("Signature invalid");
+            }
+        }
+
+        if (!DeployToken::where(['uuid' => $token])->exists()) {
+            throw new AutoDeployException("Token invalid");
+        }
+    }
+
+    protected function runAction(string $action, array $params = []): int
     {
         $config = Config::load(base_path('.deploy.yml'));
         $commands = $config->get("{$action}.commands", []);
 
         throw_unless($commands, new AutoDeployException("Action commands not found."));
 
+        $params = collect($params)->map(fn($item) => "{{$item}}")->toArray();
+
         foreach ($commands as $command) {
             echo "Running '{$command}' \n";
             $cmd = explode(' ', trim($command));
+
+            foreach ($cmd as $index => $value) {
+                $cmd[$index] = Str::replace(array_keys($params), array_values($params), $value);
+            }
+
             if ($cmd[0] == 'php' && $cmd[1] == 'artisan') {
                 Artisan::call($cmd[2]);
             } else {

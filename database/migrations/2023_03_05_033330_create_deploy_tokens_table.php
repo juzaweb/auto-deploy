@@ -17,7 +17,6 @@ return new class extends Migration {
             function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->uuid()->unique();
-                $table->json('params')->nullable();
                 $table->timestamps();
             }
         );
