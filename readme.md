@@ -38,3 +38,20 @@ https://yourdomain.com/webhook/deploy/github/{action}/{token}
 
  - Secret — A shared secret `DEPLOY_GITHUB_SECRET` in `.env`
  - Which events would you like to trigger this webhook? (Default option: "Just the push event.")
+
+##### IF YOU WANT TO ADD CUSTOM PARAM TO YOUR COMMANDS ADD QUERY STRING TO WEBHOOK URL
+
+Example:
+
+Webhook Url:
+```
+https://yourdomain.com/webhook/deploy/github/{action}/{token}?theme=default
+```
+
+On `.deploy.yml`
+```yml
+github-deploy:
+  commands:
+    - cd themes/{theme}
+    - git pull
+```
