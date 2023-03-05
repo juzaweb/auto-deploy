@@ -10,4 +10,4 @@
 
 use Juzaweb\AutoDeploy\Http\Controllers\DeployController;
 
-Route::post('auto-deploy/webhook/github/{action}', [DeployController::class, 'github']);
+Route::post('auto-deploy/{action}/{token}', [DeployController::class, 'handle']);

@@ -4,6 +4,8 @@ namespace Juzaweb\AutoDeploy\Providers;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Juzaweb\AutoDeploy\Commands\AutoDeployCommand;
+use Juzaweb\AutoDeploy\Contrasts\AutoDeploy as AutoDeployContrast;
+use Juzaweb\AutoDeploy\Support\AutoDeploy;
 use Juzaweb\CMS\Support\ServiceProvider;
 
 class AutoDeployServiceProvider extends ServiceProvider
@@ -11,7 +13,7 @@ class AutoDeployServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->commands([AutoDeployCommand::class]);
-        
+
         $this->app->booted(
             function () {
                 $schedule = $this->app->make(Schedule::class);
@@ -21,9 +23,11 @@ class AutoDeployServiceProvider extends ServiceProvider
             }
         );
     }
-    
+
     public function register()
     {
         $this->mergeConfigFrom(__DIR__.'/../../config/deploy.php', 'deploy');
+
+        $this->app->singleton(AutoDeployContrast::class, AutoDeploy::class);
     }
 }
