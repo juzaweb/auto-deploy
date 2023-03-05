@@ -32,18 +32,21 @@ class AutoDeploy implements AutoDeployContrast
 
         throw_unless($commands, new AutoDeployException("Action commands not found."));
 
-        $params = collect($params)->map(fn($item) => "{{$item}}")->toArray();
+        $params = collect($params)->mapWithKeys(fn($item, $key) => ["{{$key}}" => $item])->toArray();
 
         foreach ($commands as $command) {
-            echo "Running '{$command}' \n";
             $cmd = explode(' ', trim($command));
 
             foreach ($cmd as $index => $value) {
                 $cmd[$index] = Str::replace(array_keys($params), array_values($params), $value);
             }
 
+            echo "Running '". implode(' ', $cmd) ."' \n";
+
             if ($cmd[0] == 'php' && $cmd[1] == 'artisan') {
-                Artisan::call($cmd[2]);
+                unset($cmd[0]);
+                unset($cmd[1]);
+                Artisan::call(implode(' ', $cmd));
             } else {
                 $process = new Process($cmd);
 
@@ -69,7 +72,12 @@ class AutoDeploy implements AutoDeployContrast
         switch (config('deploy.method')) {
             case 'cron':
                 $schedule = get_config('deploy_schedules', []);
-                $schedule[] = ['token' => $token, 'params' => $params, 'time' => date('Y-m-d H:i:s')];
+                $schedule[] = [
+                    'action' => $action,
+                    'token' => $token,
+                    'params' => $params,
+                    'time' => date('Y-m-d H:i:s')
+                ];
                 set_config('deploy_schedules', $schedule);
                 return response("Deploy command is running...");
             case 'queue':
