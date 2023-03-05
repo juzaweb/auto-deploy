@@ -16,7 +16,7 @@ php artisan deploy:make-token
 
 Example:
 ```yml
-action:
+github-deploy:
   commands:
     - git pull
     - composer install --no-dev
@@ -32,7 +32,7 @@ To add a webhook to an existing repository, navigate to the GitHub repository pa
 https://yourdomain.com/webhook/deploy/github/{action}/{token}
 ```
 
-**{action}**: Action define in your file `.deploy.yml`
+**{action}**: Action define in your file `.deploy.yml`, example above, the action will be `github-deploy`
 
 **{token}**: Your token created above
 
