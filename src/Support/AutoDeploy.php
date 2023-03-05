@@ -45,12 +45,11 @@ class AutoDeploy implements AutoDeployContrast
         return true;
     }
 
-    public function webhook(Request $request, string $action, string $token): Response
+    public function webhook(Request $request, string $action, string $token, array $params = []): Response
     {
         Log::info("Auto Deploy Webhook: ". json_encode($request->all()));
 
         if (config('deploy.github.verify')) {
-            $outputLog = new BufferedOutput();
             $githubPayload = $request->getContent();
             $githubHash = $request->header('X-Hub-Signature');
             $localToken = config('deploy.github.secret');
@@ -71,6 +70,7 @@ class AutoDeploy implements AutoDeployContrast
                 Artisan::queue(AutoDeployCommand::class, ['action' => $action]);
                 return response("Deploy command is running...");
             default:
+                $outputLog = new BufferedOutput();
                 Artisan::call(AutoDeployCommand::class, ['action' => $action], $outputLog);
                 return response($outputLog->fetch());
         }

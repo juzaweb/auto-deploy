@@ -4,6 +4,7 @@ namespace Juzaweb\AutoDeploy\Providers;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Juzaweb\AutoDeploy\Commands\AutoDeployCommand;
+use Juzaweb\AutoDeploy\Commands\MakeDeployToken;
 use Juzaweb\AutoDeploy\Contrasts\AutoDeploy as AutoDeployContrast;
 use Juzaweb\AutoDeploy\Support\AutoDeploy;
 use Juzaweb\CMS\Support\ServiceProvider;
@@ -12,7 +13,7 @@ class AutoDeployServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        $this->commands([AutoDeployCommand::class]);
+        $this->commands([AutoDeployCommand::class, MakeDeployToken::class]);
 
         $this->app->booted(
             function () {

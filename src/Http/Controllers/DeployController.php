@@ -27,6 +27,6 @@ class DeployController extends ApiController
             return response("Deploy is not enabled.", 403);
         }
 
-        return $this->autoDeploy->webhook($request, $action, $token);
+        return $this->autoDeploy->webhook($request, $action, $token, $request->query());
     }
 }
