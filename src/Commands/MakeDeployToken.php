@@ -30,6 +30,8 @@ class MakeDeployToken extends Command
     {
         $token = DeployToken::create();
 
-        $this->info("Webhook: ". url(route('webhook.auto-deploy.handle', ['__action__', $token->uuid])));
+        $url = url(route('webhook.auto-deploy.handle', ['github', '__action__', $token->uuid]));
+
+        $this->info("Webhook: ". $url);
     }
 }
