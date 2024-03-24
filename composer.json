@@ -1,6 +1,9 @@
 {
     "name": "juzaweb/auto-deploy",
     "description": "Automate deployment deployment using git and webhooks",
+    "homepage": "https://juzaweb.com",
+    "type": "juzaweb-plugin",
+    "license": "MIT",
     "extra": {
         "laravel": {
             "providers": [
@@ -8,7 +11,7 @@
             ]
         },
         "juzaweb": {
-            "name": "Automate deployment",
+            "name": "Automate Deployment",
             "domain": "deploy",
             "cms_min": "3.3",
             "version": "1.0"
@@ -18,5 +21,9 @@
         "psr-4": {
             "Juzaweb\\AutoDeploy\\": "src/"
         }
+    },
+    "require-dev": {
+        "juzaweb/modules": "^1.0",
+        "juzaweb/dev-tool": "^1.0"
     }
 }
